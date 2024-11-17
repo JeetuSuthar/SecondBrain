@@ -4,7 +4,8 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 
 
-import { UserModel } from "./db";
+import { ContentModel, UserModel } from "./db";
+import { userMiddleware } from "./middleware";
 
 const app = express()
 
@@ -67,16 +68,46 @@ app.post("/api/v1/signin", async (req, res) => {
         });
     }
 });
-app.post("/api/v1/content", (req, res) => {
+app.post("/api/v1/content",userMiddleware, async(req, res) => {
+    const type=req.body.type;
+    const link=req.body.link;
+
+    await ContentModel.create({
+        type,
+        link,
+        //@ts-ignore
+        userId:req.userId,
+        tags:[]
+    })
+    res.json({
+        msg:"Content Added"
+    })
 
 })
 
-app.get("/api/v1/content", (req, res) => {
-
+app.get("/api/v1/content",userMiddleware, async(req, res) => {
+    //@ts-ignore
+    const userId=req.userId;
+    const content=await ContentModel.find({
+        userId:userId
+    }).populate("userId","username")
+    res.json({
+        content
+    })
 })
 
-app.delete("/api/v1/content", (req, res) => {
+app.delete("/api/v1/content",userMiddleware ,async(req, res) => {
+    const contentId = req.body.contentId;
 
+    await ContentModel.deleteMany({
+        contentId,
+        // @ts-ignore
+        userId: req.userId
+    })
+
+    res.json({
+        message: "Deleted"
+    })
 })
 
 app.post("/api/v1/brain/share", (req, res) => {

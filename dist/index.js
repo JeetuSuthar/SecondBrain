@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const db_1 = require("./db");
+const middleware_1 = require("./middleware");
 const app = (0, express_1.default)();
 const JWT_PASSWORD = "okokok123123";
 const port = process.env.PORT || 3000;
@@ -65,8 +66,20 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
 }));
-app.post("/api/v1/content", (req, res) => {
-});
+app.post("/api/v1/content", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const type = req.body.type;
+    const link = req.body.link;
+    yield db_1.ContentModel.create({
+        type,
+        link,
+        //@ts-ignore
+        userId: req.userId,
+        tags: []
+    });
+    res.json({
+        msg: "Content Added"
+    });
+}));
 app.get("/api/v1/content", (req, res) => {
 });
 app.delete("/api/v1/content", (req, res) => {
